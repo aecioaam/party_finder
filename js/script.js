@@ -30,6 +30,7 @@ const levelInput = document.getElementById('level-input');
 const levelRangeSpan = document.getElementById('level-range');
 const clearFiltersBtn = document.getElementById('clear-filters');
 const updateResultsBtn = document.getElementById('update-results');
+const refreshPlayersBtn = document.getElementById('refresh-players');
 const loading = document.getElementById('loading');
 const resultsSection = document.getElementById('results-section');
 const classesGrid = document.getElementById('classes-grid');
@@ -46,6 +47,8 @@ const copyToast = document.getElementById('copy-toast');
 let currentLevel = 0;
 let currentWorldData = null;
 let allPlayersByClass = null;
+let currentWorldName = null;
+let isRefreshing = false;
 
 // Chave para localStorage
 const STORAGE_KEY = 'tibia_party_finder_world';
@@ -99,19 +102,14 @@ function updateLevelRange() {
         const { minLevel, maxLevel } = calculateLevelRange(level);
         levelRangeSpan.textContent = `${minLevel} - ${maxLevel}`;
         updateResultsBtn.disabled = false;
-        
-        // Se já temos dados, filtrar pelos que estão no range
-        if (allPlayersByClass) {
-            filterPlayersByLevel();
-        }
     } else {
         levelRangeSpan.textContent = '-';
         updateResultsBtn.disabled = false;
-        
-        // Se não tem level, mostrar todos os jogadores
-        if (allPlayersByClass) {
-            displayPlayersByClass(allPlayersByClass, false);
-        }
+    }
+    
+    // Se já temos dados, atualizar a exibição
+    if (allPlayersByClass) {
+        filterPlayersByLevel();
     }
 }
 
@@ -129,9 +127,11 @@ async function fetchWorldData(worldName) {
         showLoading();
         hideResults();
         hideError();
+        hideRefreshButton();
         
         // Salvar o mundo selecionado
         saveWorld(worldName);
+        currentWorldName = worldName;
         
         const response = await fetch(`https://api.tibiadata.com/v4/world/${worldName.toLowerCase()}`);
         
@@ -151,6 +151,38 @@ async function fetchWorldData(worldName) {
     }
 }
 
+// Atualizar dados do mundo (refresh)
+async function refreshWorldData() {
+    if (!currentWorldName || isRefreshing) return;
+    
+    try {
+        isRefreshing = true;
+        refreshPlayersBtn.disabled = true;
+        refreshPlayersBtn.classList.add('refreshing');
+        
+        const response = await fetch(`https://api.tibiadata.com/v4/world/${currentWorldName.toLowerCase()}`);
+        
+        if (!response.ok) {
+            throw new Error('Erro ao atualizar dados');
+        }
+        
+        const data = await response.json();
+        currentWorldData = data;
+        processWorldData(data);
+        
+        // Mostrar toast de sucesso
+        showToast('Lista de jogadores atualizada!', 'success');
+        
+    } catch (error) {
+        console.error('Erro ao atualizar dados:', error);
+        showToast('Erro ao atualizar lista de jogadores', 'error');
+    } finally {
+        isRefreshing = false;
+        refreshPlayersBtn.disabled = false;
+        refreshPlayersBtn.classList.remove('refreshing');
+    }
+}
+
 // Processar dados do mundo
 function processWorldData(data) {
     const players = data.world.online_players;
@@ -158,13 +190,14 @@ function processWorldData(data) {
     // Organizar jogadores por classe
     allPlayersByClass = organizePlayersByClass(players);
     
-    // Exibir jogadores (todos inicialmente)
-    displayPlayersByClass(allPlayersByClass, false);
+    // Exibir jogadores (filtrados ou todos)
+    filterPlayersByLevel();
     
     // Atualizar estatísticas
-    updateStatistics(players, false);
+    updateStatistics(players);
     
     showResults();
+    showRefreshButton();
 }
 
 // Organizar jogadores por classe
@@ -215,15 +248,21 @@ function filterPlayersByLevel() {
     
     // Filtrar cada classe
     Object.keys(allPlayersByClass).forEach(classKey => {
-        filteredPlayersByClass[classKey] = allPlayersByClass[classKey].filter(player => {
-            return isPlayerInLevelRange(player.level);
-        });
+        if (currentLevel > 0) {
+            // Se tem level preenchido, mostrar apenas os que estão no range
+            filteredPlayersByClass[classKey] = allPlayersByClass[classKey].filter(player => {
+                return isPlayerInLevelRange(player.level);
+            });
+        } else {
+            // Se não tem level preenchido, mostrar todos
+            filteredPlayersByClass[classKey] = allPlayersByClass[classKey];
+        }
         totalInRange += filteredPlayersByClass[classKey].length;
         totalPlayers += allPlayersByClass[classKey].length;
     });
     
     // Exibir jogadores filtrados
-    displayPlayersByClass(filteredPlayersByClass, true);
+    displayPlayersByClass(filteredPlayersByClass, currentLevel > 0);
     
     // Atualizar estatísticas
     inRangePlayersSpan.textContent = totalInRange;
@@ -248,7 +287,6 @@ function displayPlayersByClass(playersByClass, isFiltered) {
     // Mostrar apenas as 5 classes definidas
     for (const classKey of ['knight', 'paladin', 'druid', 'sorcerer', 'monk']) {
         const classPlayers = playersByClass[classKey] || [];
-        if (classPlayers.length === 0 && isFiltered) continue;
         
         totalPlayers += classPlayers.length;
         
@@ -575,7 +613,7 @@ function displayCharacterInfo(data) {
 // Copiar nome para área de transferência
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        showToast();
+        showToast('Nome copiado para a área de transferência!', 'success');
     }).catch(err => {
         console.error('Erro ao copiar texto: ', err);
         // Fallback para método antigo
@@ -585,37 +623,68 @@ function copyToClipboard(text) {
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        showToast();
+        showToast('Nome copiado para a área de transferência!', 'success');
     });
 }
 
 // Mostrar toast de confirmação
-function showToast() {
-    copyToast.classList.add('show');
+function showToast(message, type = 'success') {
+    // Remove toast existente
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Cria novo toast
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    
+    // Adiciona ao body
+    document.body.appendChild(toast);
+    
+    // Mostra e depois remove
     setTimeout(() => {
-        copyToast.classList.remove('show');
+        toast.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
     }, 3000);
 }
 
 // Atualizar estatísticas
-function updateStatistics(players, isFiltered) {
+function updateStatistics(players) {
     let inRangeCount = 0;
     let totalCount = players.length;
     
-    if (currentLevel > 0 && !isFiltered) {
+    if (currentLevel > 0) {
         players.forEach(player => {
             if (isPlayerInLevelRange(player.level)) {
                 inRangeCount++;
             }
         });
-    } else if (isFiltered) {
-        inRangeCount = players.length;
     } else {
         inRangeCount = totalCount;
     }
     
     inRangePlayersSpan.textContent = inRangeCount;
     totalPlayersSpan.textContent = totalCount;
+}
+
+// Mostrar/ocultar botão de refresh
+function showRefreshButton() {
+    refreshPlayersBtn.style.display = 'block';
+    refreshPlayersBtn.classList.add('btn-refresh');
+}
+
+function hideRefreshButton() {
+    refreshPlayersBtn.style.display = 'none';
 }
 
 // Configurar event listeners
@@ -628,7 +697,9 @@ function setupEventListeners() {
         currentLevel = 0;
         updateLevelRange();
         hideResults();
+        hideRefreshButton();
         allPlayersByClass = null;
+        currentWorldName = null;
         
         // Limpar mundo salvo
         localStorage.removeItem(STORAGE_KEY);
@@ -641,6 +712,11 @@ function setupEventListeners() {
         } else {
             showError('Por favor, selecione um mundo primeiro.');
         }
+    });
+    
+    // Botão de refresh
+    refreshPlayersBtn.addEventListener('click', () => {
+        refreshWorldData();
     });
     
     // Buscar automaticamente quando o mundo for alterado
