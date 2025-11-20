@@ -665,4 +665,33 @@ select:focus {
     .info-group {
         padding: 12px;
     }
+
+    /* Adicione estilos para o botão de refresh */
+.btn-refresh {
+    background: #27ae60 !important;
+    color: white !important;
+}
+
+.btn-refresh:hover {
+    background: #2ecc71 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-refresh:disabled {
+    background: #1e8449 !important;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Adicione animação de rotação para o refresh */
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.refreshing {
+    animation: rotate 1s linear infinite;
+}
 }
