@@ -927,3 +927,156 @@ select:focus, input[type="number"]:focus {
         max-width: none;
     }
 }
+/* Estilos para informações do personagem em tabela */
+.character-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-group {
+    background: rgba(13, 25, 43, 0.6);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--border-dark);
+}
+
+.info-group h4 {
+    color: var(--primary-gold);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    border-bottom: 1px solid var(--border-dark);
+    padding-bottom: 8px;
+    font-weight: 600;
+}
+
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.info-table tr {
+    border-bottom: 1px solid var(--border-dark);
+    transition: background-color 0.2s ease;
+}
+
+.info-table tr:last-child {
+    border-bottom: none;
+}
+
+.info-table tr:hover {
+    background: rgba(28, 46, 74, 0.3);
+}
+
+.info-label {
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+    width: 40%;
+    border-right: 1px solid var(--border-dark);
+    font-size: 0.9rem;
+}
+
+.info-value {
+    color: var(--text-light);
+    padding: 12px 15px;
+    text-align: left;
+    width: 60%;
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+.info-value.highlight {
+    color: var(--primary-gold);
+    font-weight: 600;
+}
+
+.info-value.success {
+    color: var(--success);
+}
+
+.info-value.warning {
+    color: var(--warning);
+}
+
+.info-value.danger {
+    color: var(--danger);
+}
+
+/* Status indicators */
+.status-online {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.status-offline {
+    color: var(--text-muted);
+}
+
+.status-premium {
+    color: var(--primary-gold);
+    font-weight: 600;
+}
+
+.status-free {
+    color: var(--text-muted);
+}
+
+/* Badges para informações importantes */
+.info-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: var(--primary-gold);
+    color: var(--deep-blue);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.info-badge.success {
+    background: var(--success);
+    color: white;
+}
+
+.info-badge.warning {
+    background: var(--warning);
+    color: var(--deep-blue);
+}
+
+.info-badge.danger {
+    background: var(--danger);
+    color: white;
+}
+
+/* Responsividade para tabelas */
+@media (max-width: 768px) {
+    .info-table {
+        display: block;
+    }
+    
+    .info-table tr {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-dark);
+    }
+    
+    .info-label,
+    .info-value {
+        width: 100%;
+        border-right: none;
+        padding: 8px 0;
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        padding-bottom: 4px;
+    }
+    
+    .info-value {
+        padding-top: 4px;
+    }
+}
