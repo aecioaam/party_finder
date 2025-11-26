@@ -409,9 +409,8 @@ async function showCharacterInfo(characterName) {
     }
 }
 
-// Exibir informações do personagem no modal
+// Exibir informações do personagem no modal (ATUALIZADA COM TABELAS)
 function displayCharacterInfo(data) {
-    // CORREÇÃO: A estrutura correta é data.character.character
     const character = data.character.character;
     
     console.log('Dados do personagem para exibição:', character);
@@ -429,35 +428,39 @@ function displayCharacterInfo(data) {
     let html = `
         <div class="character-info">
             <div class="info-group">
-                <h4>Informações Básicas</h4>
-                <div class="info-item">
-                    <span class="info-label">Nome:</span>
-                    <span class="info-value">${character.name || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Sexo:</span>
-                    <span class="info-value">${character.sex === 'female' ? 'Feminino' : 'Masculino'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Level:</span>
-                    <span class="info-value">${character.level || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Vocação:</span>
-                    <span class="info-value">${character.vocation || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Mundo:</span>
-                    <span class="info-value">${character.world || 'N/A'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Título:</span>
-                    <span class="info-value">${character.title || 'Nenhum'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Status da Conta:</span>
-                    <span class="info-value">${character.account_status || 'N/A'}</span>
-                </div>
+                <h4><i class="fas fa-id-card"></i> Informações Básicas</h4>
+                <table class="info-table">
+                    <tr>
+                        <td class="info-label">Nome:</td>
+                        <td class="info-value highlight">${character.name || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Sexo:</td>
+                        <td class="info-value">${character.sex === 'female' ? '♀ Feminino' : '♂ Masculino'}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Level:</td>
+                        <td class="info-value highlight">${character.level || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Vocação:</td>
+                        <td class="info-value">${character.vocation || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Mundo:</td>
+                        <td class="info-value">${character.world || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Título:</td>
+                        <td class="info-value">${character.title || 'Nenhum'}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Status da Conta:</td>
+                        <td class="info-value ${character.account_status === 'Premium Account' ? 'status-premium' : 'status-free'}">
+                            ${character.account_status || 'N/A'}
+                        </td>
+                    </tr>
+                </table>
             </div>
     `;
 
@@ -465,15 +468,17 @@ function displayCharacterInfo(data) {
     if (character.guild && character.guild.name) {
         html += `
             <div class="info-group">
-                <h4>Guilda</h4>
-                <div class="info-item">
-                    <span class="info-label">Nome:</span>
-                    <span class="info-value">${character.guild.name}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Rank:</span>
-                    <span class="info-value">${character.guild.rank || 'N/A'}</span>
-                </div>
+                <h4><i class="fas fa-users"></i> Guilda</h4>
+                <table class="info-table">
+                    <tr>
+                        <td class="info-label">Nome:</td>
+                        <td class="info-value highlight">${character.guild.name}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">Rank:</td>
+                        <td class="info-value">${character.guild.rank || 'N/A'}</td>
+                    </tr>
+                </table>
             </div>
         `;
     }
@@ -482,131 +487,147 @@ function displayCharacterInfo(data) {
     if (character.houses && character.houses.length > 0) {
         html += `
             <div class="info-group">
-                <h4>Casas (${character.houses.length})</h4>
-                ${character.houses.slice(0, 3).map(house => {
-                    const paidDate = new Date(house.paid);
-                    return `
-                        <div class="info-item">
-                            <span class="info-label">${house.name}:</span>
-                            <span class="info-value" style="font-size: 0.8rem;">
-                                ${house.town} - Pago até ${paidDate.toLocaleDateString('pt-BR')}
-                            </span>
-                        </div>
-                    `;
-                }).join('')}
-                ${character.houses.length > 3 ? 
-                    `<div class="info-item">
-                        <span class="info-label">...</span>
-                        <span class="info-value">+${character.houses.length - 3} casas</span>
-                    </div>` : ''}
-            </div>
+                <h4><i class="fas fa-home"></i> Casas (${character.houses.length})</h4>
+                <table class="info-table">
         `;
+        
+        character.houses.slice(0, 5).forEach(house => {
+            const paidDate = new Date(house.paid);
+            html += `
+                <tr>
+                    <td class="info-label">${house.name}:</td>
+                    <td class="info-value">
+                        ${house.town} - Pago até ${paidDate.toLocaleDateString('pt-BR')}
+                    </td>
+                </tr>
+            `;
+        });
+        
+        if (character.houses.length > 5) {
+            html += `
+                <tr>
+                    <td class="info-label">...</td>
+                    <td class="info-value">+${character.houses.length - 5} casas</td>
+                </tr>
+            `;
+        }
+        
+        html += `</table></div>`;
     }
 
     // Mortes Recentes
     if (data.character.deaths && data.character.deaths.length > 0) {
         html += `
             <div class="info-group">
-                <h4>Últimas Mortes (${data.character.deaths.length})</h4>
-                ${data.character.deaths.slice(0, 3).map(death => {
-                    const date = new Date(death.time);
-                    const killers = death.killers.map(k => k.name).join(', ');
-                    return `
-                        <div class="info-item">
-                            <span class="info-label">Level ${death.level}:</span>
-                            <span class="info-value" style="font-size: 0.8rem;">
-                                ${date.toLocaleDateString('pt-BR')} - ${killers}
-                            </span>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
+                <h4><i class="fas fa-skull"></i> Últimas Mortes (${data.character.deaths.length})</h4>
+                <table class="info-table">
         `;
+        
+        data.character.deaths.slice(0, 5).forEach(death => {
+            const date = new Date(death.time);
+            const killers = death.killers.map(k => k.name).join(', ');
+            html += `
+                <tr>
+                    <td class="info-label">Level ${death.level}:</td>
+                    <td class="info-value">
+                        ${date.toLocaleDateString('pt-BR')} - ${killers}
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `</table></div>`;
     }
 
     // Informações da Conta
     if (data.character.account_information) {
         html += `
             <div class="info-group">
-                <h4>Informações da Conta</h4>
+                <h4><i class="fas fa-user-shield"></i> Informações da Conta</h4>
+                <table class="info-table">
         `;
         
         if (data.character.account_information.created) {
             const created = new Date(data.character.account_information.created);
             html += `
-                <div class="info-item">
-                    <span class="info-label">Criada em:</span>
-                    <span class="info-value">${created.toLocaleDateString('pt-BR')}</span>
-                </div>
+                <tr>
+                    <td class="info-label">Criada em:</td>
+                    <td class="info-value">${created.toLocaleDateString('pt-BR')}</td>
+                </tr>
             `;
         }
         
         if (data.character.account_information.loyalty_title) {
             html += `
-                <div class="info-item">
-                    <span class="info-label">Título de Loyalty:</span>
-                    <span class="info-value">${data.character.account_information.loyalty_title}</span>
-                </div>
+                <tr>
+                    <td class="info-label">Título de Loyalty:</td>
+                    <td class="info-value">${data.character.account_information.loyalty_title}</td>
+                </tr>
             `;
         }
         
-        html += `</div>`;
+        html += `</table></div>`;
     }
 
     // Informações Adicionais
     html += `
         <div class="info-group">
-            <h4>Informações Adicionais</h4>
+            <h4><i class="fas fa-info-circle"></i> Informações Adicionais</h4>
+            <table class="info-table">
     `;
 
     if (character.residence) {
         html += `
-            <div class="info-item">
-                <span class="info-label">Residência:</span>
-                <span class="info-value">${character.residence}</span>
-            </div>
+            <tr>
+                <td class="info-label">Residência:</td>
+                <td class="info-value">${character.residence}</td>
+            </tr>
         `;
     }
 
     if (character.last_login) {
         const lastLogin = new Date(character.last_login);
+        const isOnline = (new Date() - lastLogin) < 300000; // 5 minutos
         html += `
-            <div class="info-item">
-                <span class="info-label">Último Login:</span>
-                <span class="info-value">${lastLogin.toLocaleString('pt-BR')}</span>
-            </div>
+            <tr>
+                <td class="info-label">Último Login:</td>
+                <td class="info-value ${isOnline ? 'status-online' : ''}">
+                    ${lastLogin.toLocaleString('pt-BR')}
+                    ${isOnline ? ' <span class="info-badge success">ONLINE</span>' : ''}
+                </td>
+            </tr>
         `;
     }
 
     if (character.achievement_points !== undefined) {
         html += `
-            <div class="info-item">
-                <span class="info-label">Pontos de Conquista:</span>
-                <span class="info-value">${character.achievement_points}</span>
-            </div>
+            <tr>
+                <td class="info-label">Pontos de Conquista:</td>
+                <td class="info-value highlight">${character.achievement_points.toLocaleString('pt-BR')}</td>
+            </tr>
         `;
     }
 
     if (character.unlocked_titles !== undefined) {
         html += `
-            <div class="info-item">
-                <span class="info-label">Títulos Desbloqueados:</span>
-                <span class="info-value">${character.unlocked_titles}</span>
-            </div>
+            <tr>
+                <td class="info-label">Títulos Desbloqueados:</td>
+                <td class="info-value">${character.unlocked_titles}</td>
+            </tr>
         `;
     }
 
     // Outros Personagens
     if (data.character.other_characters && data.character.other_characters.length > 0) {
         html += `
-            <div class="info-item">
-                <span class="info-label">Outros Personagens:</span>
-                <span class="info-value">${data.character.other_characters.length}</span>
-            </div>
+            <tr>
+                <td class="info-label">Outros Personagens:</td>
+                <td class="info-value">${data.character.other_characters.length}</td>
+            </tr>
         `;
     }
 
-    html += `</div></div>`;
+    html += `</table></div></div>`;
     modalBody.innerHTML = html;
 }
 
